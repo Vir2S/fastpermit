@@ -1,5 +1,5 @@
-from collections.abc import Mapping, Set
-from typing import Any, Protocol
+from collections.abc import Mapping
+from typing import AbstractSet, Any, Protocol
 
 from fastpermit.principal import Principal
 
@@ -12,6 +12,6 @@ class PermissionBackend(Protocol):
         principal: Principal,
         *,
         scope: Mapping[str, Any],
-    ) -> Set[str]:
+    ) -> AbstractSet[str]:
         """Return effective permission codes for the principal within the supplied scope."""
         ...

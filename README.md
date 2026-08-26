@@ -226,8 +226,8 @@ A backend answers one question: which permission codes are effective for this pr
 scope?
 
 ```python
-from collections.abc import Mapping, Set
-from typing import Any
+from collections.abc import Mapping
+from typing import AbstractSet, Any
 
 from fastpermit import PermissionBackend, Principal
 
@@ -238,7 +238,7 @@ class MyBackend(PermissionBackend):
         principal: Principal,
         *,
         scope: Mapping[str, Any],
-    ) -> Set[str]:
+    ) -> AbstractSet[str]:
         ...
 ```
 

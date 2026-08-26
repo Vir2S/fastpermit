@@ -1,5 +1,5 @@
-from collections.abc import Mapping, Set
-from typing import Any
+from collections.abc import Mapping
+from typing import AbstractSet, Any
 
 import pytest
 
@@ -15,7 +15,7 @@ class CountingBackend:
         principal: BasicPrincipal,
         *,
         scope: Mapping[str, Any],
-    ) -> Set[str]:
+    ) -> AbstractSet[str]:
         self.calls += 1
         return {"project:read", str(scope.get("extra", ""))}
 

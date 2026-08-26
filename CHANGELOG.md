@@ -7,9 +7,9 @@ intends to follow Semantic Versioning once the public API stabilizes.
 
 ## [Unreleased]
 
-### Fixed
+### Changed
 
-- Updated collection type imports for compatibility with current Ruff pyupgrade rules.
+- Removed Ruff from the mandatory CI and release check gate; linting and formatting remain available as optional local commands.
 
 ## [0.1.0] - 2026-08-26
 

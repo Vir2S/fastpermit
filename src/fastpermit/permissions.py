@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from typing import Literal, cast
 
 from fastpermit.core.context import PermissionContext
