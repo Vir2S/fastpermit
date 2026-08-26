@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fastpermit"
+version = "0.1.0.dev0"
+description = "Composable, backend-agnostic authorization for FastAPI."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Vitalii Semotiuk" },
+]
+maintainers = [
+    { name = "Vitalii Semotiuk" },
+]
+keywords = [
+    "fastapi",
+    "authorization",
+    "permissions",
+    "rbac",
+    "abac",
+    "access-control",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Typing :: Typed",
+]
+dependencies = [
+    "fastapi>=0.115",
+]
+
+[project.urls]
+Homepage = "https://github.com/Vir2S/fastpermit"
+Repository = "https://github.com/Vir2S/fastpermit"
+Issues = "https://github.com/Vir2S/fastpermit/issues"
+Changelog = "https://github.com/Vir2S/fastpermit/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+    "build>=1.2",
+    "httpx>=0.28",
+    "mypy>=1.15",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+    "pytest-cov>=6.0",
+    "ruff>=0.11",
+    "twine>=6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+fastpermit = ["py.typed"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --strict-config"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+branch = true
+source = ["fastpermit"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 95
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC"]
+ignore = ["B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["fastpermit"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+show_error_codes = true
+pretty = true
+packages = ["fastpermit"]

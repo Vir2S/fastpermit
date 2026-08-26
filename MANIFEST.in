@@ -1,0 +1,6 @@
+include CHANGELOG.md
+include CONTRIBUTING.md
+include LICENSE
+include Makefile
+recursive-include examples *.py
+recursive-include .github *.yml
