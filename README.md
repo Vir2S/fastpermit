@@ -341,6 +341,6 @@ MIT
 
 ## Maintainer
 
-Created and maintained by [Vitalii Semotiuk](https://github.com/Vir2S).
+Created and maintained by [Vitaly Sem](https://github.com/Vir2S).
 
 FastPermit is an independent open-source project developed with support from Born2CodeLab.
