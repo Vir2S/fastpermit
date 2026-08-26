@@ -1,0 +1,2 @@
+# fastpermit
+FastAPI Permissions Library
