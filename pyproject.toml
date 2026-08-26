@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fastpermit"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "Composable, backend-agnostic authorization for FastAPI."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -43,7 +43,7 @@ dependencies = [
 Homepage = "https://github.com/Vir2S/fastpermit"
 Repository = "https://github.com/Vir2S/fastpermit"
 Issues = "https://github.com/Vir2S/fastpermit/issues"
-Changelog = "https://github.com/Vir2S/fastpermit/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/Vir2S/fastpermit/blob/master/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
