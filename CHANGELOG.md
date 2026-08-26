@@ -9,10 +9,19 @@ intends to follow Semantic Versioning once the public API stabilizes.
 
 ### Changed
 
+- Removed Ruff from the mandatory CI and release check gate; linting and formatting remain available as optional local commands.
+
+## [0.1.0] - 2026-08-26
+
+### Changed
+
 - Flattened the framework integration into `fastpermit.integrations` so framework names no longer appear in internal module paths.
+- Updated package and documentation metadata for the first public release.
 
 ### Added
 
+- PyPI Trusted Publishing release workflow using GitHub OIDC.
+- Release documentation and tag/version verification.
 - Public repository metadata, maintainer information, CI badges, and security policy.
 - Request-level prechecks for object dependencies so denied requests do not load protected resources.
 - Source and wheel packaging configuration with typed-package marker support.

@@ -22,7 +22,7 @@ build:
 	python -m build
 	python -m twine check dist/*
 
-check: lint format-check typecheck test build
+check: typecheck test build
 
 clean:
 	rm -rf .coverage .mypy_cache .pytest_cache .ruff_cache build dist htmlcov

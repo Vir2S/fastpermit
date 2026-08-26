@@ -20,7 +20,7 @@ The core is deliberately small:
 - FastAPI dependency integration;
 - no ORM or cache dependency in the core.
 
-> Status: `0.1.0.dev0` — API design and implementation scaffold.
+> Status: `0.1.0` — first public release.
 
 ## Project status
 
@@ -36,7 +36,7 @@ Planned next steps:
 
 ## Installation
 
-Once the first release is published to PyPI:
+Install from PyPI:
 
 ```bash
 pip install fastpermit
