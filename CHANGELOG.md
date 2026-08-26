@@ -7,6 +7,10 @@ intends to follow Semantic Versioning once the public API stabilizes.
 
 ## [Unreleased]
 
+### Fixed
+
+- Updated collection type imports for compatibility with current Ruff pyupgrade rules.
+
 ## [0.1.0] - 2026-08-26
 
 ### Changed

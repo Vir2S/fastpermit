@@ -226,8 +226,8 @@ A backend answers one question: which permission codes are effective for this pr
 scope?
 
 ```python
-from collections.abc import Mapping
-from typing import AbstractSet, Any
+from collections.abc import Mapping, Set
+from typing import Any
 
 from fastpermit import PermissionBackend, Principal
 
@@ -238,7 +238,7 @@ class MyBackend(PermissionBackend):
         principal: Principal,
         *,
         scope: Mapping[str, Any],
-    ) -> AbstractSet[str]:
+    ) -> Set[str]:
         ...
 ```
 
@@ -341,6 +341,6 @@ MIT
 
 ## Maintainer
 
-Created and maintained by [Vitaly Semo](https://github.com/Vir2S).
+Created and maintained by [Vitaly Sem](https://github.com/Vir2S).
 
 FastPermit is an independent open-source project developed with support from Born2CodeLab.
