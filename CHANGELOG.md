@@ -7,6 +7,10 @@ intends to follow Semantic Versioning once the public API stabilizes.
 
 ## [Unreleased]
 
+### Added
+
+- Added `requirements.txt` for runtime dependencies and `requirements-dev.txt` for development, testing, and packaging dependencies.
+
 ### Changed
 
 - Removed Ruff from the mandatory CI and release check gate; linting and formatting remain available as optional local commands.

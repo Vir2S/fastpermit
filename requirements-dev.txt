@@ -1,0 +1,10 @@
+# Development, testing, and packaging dependencies.
+-r requirements.txt
+
+build>=1.2
+httpx>=0.28
+mypy>=1.15
+pytest>=8.3
+pytest-asyncio>=0.25
+pytest-cov>=6.0
+twine>=6.0

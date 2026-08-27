@@ -1,0 +1,4 @@
+# Runtime dependencies for FastPermit source installs.
+# Package metadata in pyproject.toml remains the source of truth.
+
+fastapi>=0.115
