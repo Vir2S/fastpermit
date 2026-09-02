@@ -3,6 +3,7 @@
 [![CI](https://github.com/Vir2S/fastpermit/actions/workflows/ci.yml/badge.svg)](https://github.com/Vir2S/fastpermit/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/fastpermit)](https://pypi.org/project/fastpermit/)
 
 **Composable, backend-agnostic authorization for FastAPI.**
 
@@ -20,7 +21,7 @@ The core is deliberately small:
 - FastAPI dependency integration;
 - no ORM or cache dependency in the core.
 
-> Status: `0.1.0` — first public release.
+> Status: `0.1.1` — authorization hardening release.
 
 ## Project status
 
@@ -226,8 +227,8 @@ A backend answers one question: which permission codes are effective for this pr
 scope?
 
 ```python
-from collections.abc import Mapping
-from typing import AbstractSet, Any
+from collections.abc import Mapping, Set
+from typing import Any
 
 from fastpermit import PermissionBackend, Principal
 
@@ -238,7 +239,7 @@ class MyBackend(PermissionBackend):
         principal: Principal,
         *,
         scope: Mapping[str, Any],
-    ) -> AbstractSet[str]:
+    ) -> Set[str]:
         ...
 ```
 
@@ -279,6 +280,30 @@ When a FastPermit rule denies access:
 
 - an absent or unauthenticated principal produces `401 Unauthorized`;
 - an authenticated principal without sufficient authorization produces `403 Forbidden`.
+
+A custom exception factory can override the integration response, including masking object-level
+denials as `404 Not Found`:
+
+```python
+from fastapi import HTTPException
+
+
+def access_exception(principal, permission, phase):
+    if phase == "object":
+        return HTTPException(status_code=404, detail="Not found.")
+    return HTTPException(status_code=403, detail=permission.message)
+
+
+permit = FastPermit(
+    backend=backend,
+    principal_loader=get_current_principal,
+    exception_factory=access_exception,
+)
+```
+
+`PermissionEvaluator.check()` and `check_object()` are strict: only an explicit `True` decision
+allows access. A neutral `None` decision remains available through `decision()` and
+`object_decision()` for composition and pre-check workflows.
 
 ## Design principles
 
@@ -341,6 +366,6 @@ MIT
 
 ## Maintainer
 
-Created and maintained by [Vitaly Sem](https://github.com/Vir2S).
+Created and maintained by [Vitalii Semotiuk](https://github.com/Vir2S).
 
 FastPermit is an independent open-source project developed with support from Born2CodeLab.

@@ -39,7 +39,7 @@ class PermissionEvaluator:
             scope=scope,
             attributes=attributes,
         )
-        return decision is not False
+        return decision is True
 
     async def object_decision(
         self,
@@ -69,7 +69,7 @@ class PermissionEvaluator:
             scope=scope,
             attributes=attributes,
         )
-        return decision is not False
+        return decision is True
 
     def _context(
         self,

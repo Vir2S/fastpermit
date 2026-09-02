@@ -1,5 +1,5 @@
-from collections.abc import Iterable, Mapping
-from typing import AbstractSet, Any, Hashable
+from collections.abc import Hashable, Iterable, Mapping, Set
+from typing import Any
 
 from fastpermit.principal import Principal
 
@@ -21,7 +21,7 @@ class InMemoryBackend:
         principal: Principal,
         *,
         scope: Mapping[str, Any],
-    ) -> AbstractSet[str]:
+    ) -> Set[str]:
         del scope
         return frozenset(self._permissions.get(principal.id, set()))
 

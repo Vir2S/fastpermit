@@ -7,13 +7,28 @@ intends to follow Semantic Versioning once the public API stabilizes.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-02
+
+### Security
+
+- Deny `HasRole` and `HasPermission` checks for principals marked as unauthenticated.
+- Require an explicit allow decision in public evaluator checks and final object authorization.
+
 ### Added
 
+- Added a configurable access exception factory with request/object phase information.
+- Added generic typing for principal and object dependencies.
+- Added PyPI status badge and regression coverage for authorization hardening.
 - Added `requirements.txt` for runtime dependencies and `requirements-dev.txt` for development, testing, and packaging dependencies.
 
 ### Changed
 
+- Made installed package metadata the single source of truth for `fastpermit.__version__`, with a source-tree fallback.
+- Updated the package development classifier from Pre-Alpha to Alpha.
+- Modernized collection protocol imports for Python 3.11+.
 - Removed Ruff from the mandatory CI and release check gate; linting and formatting remain available as optional local commands.
+- Fixed GitHub bug report version placeholders so Issue Forms parse them as strings.
+- Included release, security, requirements, and test support files in source distributions.
 
 ## [0.1.0] - 2026-08-26
 

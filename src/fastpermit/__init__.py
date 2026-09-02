@@ -1,3 +1,5 @@
+from importlib.metadata import PackageNotFoundError, version
+
 from fastpermit.backends import InMemoryBackend, PermissionBackend
 from fastpermit.core import (
     BasePermission,
@@ -6,7 +8,7 @@ from fastpermit.core import (
     all_of,
     any_of,
 )
-from fastpermit.integrations import FastPermit
+from fastpermit.integrations import AccessExceptionFactory, AccessPhase, FastPermit
 from fastpermit.permissions import (
     AllowAny,
     DenyAll,
@@ -17,6 +19,8 @@ from fastpermit.permissions import (
 from fastpermit.principal import BasicPrincipal, Principal
 
 __all__ = [
+    "AccessExceptionFactory",
+    "AccessPhase",
     "AllowAny",
     "BasePermission",
     "BasicPrincipal",
@@ -34,4 +38,7 @@ __all__ = [
     "any_of",
 ]
 
-__version__ = "0.1.0"
+try:
+    __version__ = version("fastpermit")
+except PackageNotFoundError:  # pragma: no cover - source tree only
+    __version__ = "0+unknown"

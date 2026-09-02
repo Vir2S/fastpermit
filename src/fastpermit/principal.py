@@ -1,6 +1,6 @@
-from collections.abc import Mapping
+from collections.abc import Hashable, Mapping, Set
 from dataclasses import dataclass, field
-from typing import AbstractSet, Any, Hashable, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 @runtime_checkable
@@ -13,7 +13,7 @@ class Principal(Protocol):
         ...
 
     @property
-    def roles(self) -> AbstractSet[str]:
+    def roles(self) -> Set[str]:
         """Roles already attached to the principal by the application."""
         ...
 

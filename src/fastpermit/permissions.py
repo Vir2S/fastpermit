@@ -68,7 +68,7 @@ class HasRole(BasePermission):
         context: PermissionContext,
     ) -> bool:
         del context
-        if principal is None:
+        if principal is None or not principal.is_authenticated:
             return False
 
         if self.mode == "all":
@@ -95,7 +95,7 @@ class HasPermission(BasePermission):
         principal: Principal | None,
         context: PermissionContext,
     ) -> Decision:
-        if principal is None:
+        if principal is None or not principal.is_authenticated:
             return False
 
         effective = await context.get_permissions(principal)
