@@ -31,7 +31,7 @@ class IsOwner(BasePermission):
 @pytest.mark.asyncio
 async def test_object_only_permission_is_neutral_during_request_phase(backend, alice) -> None:
     evaluator = PermissionEvaluator(backend)
-    assert await evaluator.check(IsOwner(), alice) is True
+    assert await evaluator.check(IsOwner(), alice) is False
 
 
 @pytest.mark.asyncio
@@ -60,7 +60,7 @@ async def test_request_and_object_permissions_compose_with_or(backend, alice, ad
     evaluator = PermissionEvaluator(backend)
     permission = HasRole("admin") | IsOwner()
 
-    assert await evaluator.check(permission, alice) is True
+    assert await evaluator.check(permission, alice) is False
     assert await evaluator.check_object(permission, alice, Project(owner_id="alice")) is True
     assert await evaluator.check_object(permission, alice, Project(owner_id="bob")) is False
     assert await evaluator.check_object(permission, admin, Project(owner_id="bob")) is True
@@ -71,7 +71,7 @@ async def test_not_works_for_object_only_permission(backend, alice) -> None:
     evaluator = PermissionEvaluator(backend)
     permission = ~IsOwner()
 
-    assert await evaluator.check(permission, alice) is True
+    assert await evaluator.check(permission, alice) is False
     assert await evaluator.check_object(permission, alice, Project(owner_id="alice")) is False
     assert await evaluator.check_object(permission, alice, Project(owner_id="bob")) is True
 
@@ -95,7 +95,7 @@ async def test_fully_neutral_permission_stays_neutral(backend, alice) -> None:
 
     assert await evaluator.decision(permission, alice) is None
     assert await evaluator.object_decision(permission, alice, Project(owner_id="alice")) is None
-    assert await evaluator.check_object(permission, alice, Project(owner_id="alice")) is True
+    assert await evaluator.check_object(permission, alice, Project(owner_id="alice")) is False
 
 
 @pytest.mark.asyncio

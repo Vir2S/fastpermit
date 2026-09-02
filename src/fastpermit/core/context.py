@@ -1,6 +1,6 @@
-from collections.abc import Mapping
+from collections.abc import Hashable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Hashable
+from typing import Any
 
 from fastpermit.backends.base import PermissionBackend
 from fastpermit.principal import Principal

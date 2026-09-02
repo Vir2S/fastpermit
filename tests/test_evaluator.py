@@ -1,6 +1,6 @@
 import pytest
 
-from fastpermit import HasPermission, PermissionEvaluator
+from fastpermit import BasePermission, HasPermission, PermissionEvaluator
 
 
 @pytest.mark.asyncio
@@ -37,3 +37,14 @@ async def test_scope_and_attributes_are_forwarded_to_context(alice) -> None:
         attributes={"trace_id": "trace-1"},
     )
     assert captured == {"tenant_id": "tenant-1"}
+
+
+@pytest.mark.asyncio
+async def test_check_requires_explicit_allow_decision(backend, alice) -> None:
+    evaluator = PermissionEvaluator(backend)
+    neutral = BasePermission()
+
+    assert await evaluator.decision(neutral, alice) is None
+    assert await evaluator.check(neutral, alice) is False
+    assert await evaluator.object_decision(neutral, alice, object()) is None
+    assert await evaluator.check_object(neutral, alice, object()) is False

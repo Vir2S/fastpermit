@@ -69,6 +69,37 @@ async def test_has_permission_denies_anonymous(backend) -> None:
     assert await evaluator.check(HasPermission("project:read"), None) is False
 
 
+
+
+@pytest.mark.asyncio
+async def test_has_role_denies_unauthenticated_principal(backend) -> None:
+    evaluator = PermissionEvaluator(backend)
+    anonymous = BasicPrincipal(
+        id="anonymous",
+        roles=frozenset({"admin"}),
+        is_authenticated=False,
+    )
+
+    assert await evaluator.check(HasRole("admin"), anonymous) is False
+
+
+@pytest.mark.asyncio
+async def test_has_permission_denies_unauthenticated_principal() -> None:
+    calls = {"backend": 0}
+
+    class Backend:
+        async def get_permissions(self, principal, *, scope):
+            del principal, scope
+            calls["backend"] += 1
+            return {"project:read"}
+
+    evaluator = PermissionEvaluator(Backend())
+    anonymous = BasicPrincipal(id="anonymous", is_authenticated=False)
+
+    assert await evaluator.check(HasPermission("project:read"), anonymous) is False
+    assert calls["backend"] == 0
+
+
 @pytest.mark.asyncio
 async def test_and_short_circuits_on_false(backend, alice) -> None:
     evaluator = PermissionEvaluator(backend)

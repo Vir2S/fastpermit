@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.testclient import TestClient
 
 from fastpermit import (
@@ -172,3 +172,81 @@ def test_require_object_precheck_runs_before_loader() -> None:
 
     assert response.status_code == 403
     assert calls["loader"] == 0
+
+
+def test_require_object_denies_fully_neutral_permission() -> None:
+    app = FastAPI()
+    backend = InMemoryBackend()
+
+    async def principal_loader() -> BasicPrincipal:
+        return BasicPrincipal(id="alice")
+
+    async def loader() -> Project:
+        return Project(id=1, owner_id="alice")
+
+    permit = FastPermit(backend=backend, principal_loader=principal_loader)
+
+    @app.get("/neutral")
+    async def neutral(
+        project: Project = Depends(
+            permit.require_object(
+                BasePermission(),
+                loader=loader,
+            )
+        ),
+    ) -> dict[str, int]:
+        return {"project_id": project.id}
+
+    response = TestClient(app).get("/neutral")
+
+    assert response.status_code == 403
+
+
+def test_custom_exception_factory_receives_object_phase() -> None:
+    app = FastAPI()
+    backend = InMemoryBackend({"bob": {"project:update"}})
+    phases: list[str] = []
+
+    async def principal_loader() -> BasicPrincipal:
+        return BasicPrincipal(id="bob")
+
+    async def loader() -> Project:
+        return Project(id=1, owner_id="alice")
+
+    class IsOwner(BasePermission):
+        async def has_object_permission(
+            self,
+            principal: Principal | None,
+            obj: Project,
+            context: PermissionContext,
+        ) -> bool:
+            del context
+            return principal is not None and principal.id == obj.owner_id
+
+    def exception_factory(principal, permission, phase):
+        del principal, permission
+        phases.append(phase)
+        return HTTPException(status_code=404, detail="Not found.")
+
+    permit = FastPermit(
+        backend=backend,
+        principal_loader=principal_loader,
+        exception_factory=exception_factory,
+    )
+
+    @app.patch("/masked/{project_id}")
+    async def masked(
+        project: Project = Depends(
+            permit.require_object(
+                HasPermission("project:update") & IsOwner(),
+                loader=loader,
+            )
+        ),
+    ) -> dict[str, int]:
+        return {"project_id": project.id}
+
+    response = TestClient(app).patch("/masked/1")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+    assert phases == ["object"]
