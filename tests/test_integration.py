@@ -1,5 +1,8 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
+
+import pytest
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.testclient import TestClient
@@ -250,3 +253,190 @@ def test_custom_exception_factory_receives_object_phase() -> None:
     assert response.status_code == 404
     assert response.json() == {"detail": "Not found."}
     assert phases == ["object"]
+
+
+
+def test_require_resolves_async_dynamic_scope_from_path_parameter() -> None:
+    app = FastAPI()
+    seen_scopes: list[Mapping[str, Any]] = []
+
+    class TenantBackend:
+        async def get_permissions(
+            self,
+            principal: Principal,
+            *,
+            scope: Mapping[str, Any],
+        ) -> frozenset[str]:
+            del principal
+            seen_scopes.append(scope)
+            if scope.get("tenant_id") == "acme":
+                return frozenset({"project:read"})
+            return frozenset()
+
+    async def principal_loader() -> BasicPrincipal:
+        return BasicPrincipal(id="alice")
+
+    async def tenant_scope(tenant_id: str) -> dict[str, str]:
+        return {"tenant_id": tenant_id}
+
+    permit = FastPermit(backend=TenantBackend(), principal_loader=principal_loader)
+
+    @app.get("/tenants/{tenant_id}/projects")
+    async def projects(
+        principal: BasicPrincipal = Depends(
+            permit.require("project:read", scope_loader=tenant_scope)
+        ),
+    ) -> dict[str, str]:
+        return {"principal_id": str(principal.id)}
+
+    allowed = TestClient(app).get("/tenants/acme/projects")
+    denied = TestClient(app).get("/tenants/other/projects")
+
+    assert allowed.status_code == 200
+    assert denied.status_code == 403
+    assert seen_scopes == [
+        {"tenant_id": "acme"},
+        {"tenant_id": "other"},
+    ]
+
+
+def test_require_supports_sync_dynamic_scope_loader() -> None:
+    app = FastAPI()
+
+    class TenantBackend:
+        async def get_permissions(
+            self,
+            principal: Principal,
+            *,
+            scope: Mapping[str, Any],
+        ) -> frozenset[str]:
+            del principal
+            if scope.get("tenant_id") == "acme":
+                return frozenset({"project:read"})
+            return frozenset()
+
+    async def principal_loader() -> BasicPrincipal:
+        return BasicPrincipal(id="alice")
+
+    def tenant_scope(tenant_id: str) -> dict[str, str]:
+        return {"tenant_id": tenant_id}
+
+    permit = FastPermit(backend=TenantBackend(), principal_loader=principal_loader)
+
+    @app.get("/tenants/{tenant_id}/projects")
+    async def projects(
+        principal: BasicPrincipal = Depends(
+            permit.require("project:read", scope_loader=tenant_scope)
+        ),
+    ) -> dict[str, str]:
+        return {"principal_id": str(principal.id)}
+
+    response = TestClient(app).get("/tenants/acme/projects")
+
+    assert response.status_code == 200
+
+
+def test_require_object_reuses_dynamic_scope_for_object_permission() -> None:
+    app = FastAPI()
+
+    @dataclass
+    class TenantProject:
+        id: int
+        tenant_id: str
+
+    class IsInTenant(BasePermission):
+        async def has_object_permission(
+            self,
+            principal: Principal | None,
+            obj: TenantProject,
+            context: PermissionContext,
+        ) -> bool:
+            return (
+                principal is not None
+                and context.scope.get("tenant_id") == obj.tenant_id
+            )
+
+    async def principal_loader() -> BasicPrincipal:
+        return BasicPrincipal(id="alice")
+
+    async def tenant_scope(tenant_id: str) -> dict[str, str]:
+        return {"tenant_id": tenant_id}
+
+    async def loader(tenant_id: str, project_id: int) -> TenantProject:
+        return TenantProject(id=project_id, tenant_id=tenant_id)
+
+    permit = FastPermit(backend=InMemoryBackend(), principal_loader=principal_loader)
+
+    @app.get("/tenants/{tenant_id}/projects/{project_id}")
+    async def project(
+        obj: TenantProject = Depends(
+            permit.require_object(
+                IsInTenant(),
+                loader=loader,
+                scope_loader=tenant_scope,
+            )
+        ),
+    ) -> dict[str, Any]:
+        return {"id": obj.id, "tenant_id": obj.tenant_id}
+
+    response = TestClient(app).get("/tenants/acme/projects/7")
+
+    assert response.status_code == 200
+    assert response.json() == {"id": 7, "tenant_id": "acme"}
+
+
+def test_scope_and_scope_loader_are_mutually_exclusive() -> None:
+    permit = FastPermit(
+        backend=InMemoryBackend(),
+        principal_loader=lambda: BasicPrincipal(id="alice"),
+    )
+
+    async def scope_loader() -> dict[str, str]:
+        return {"tenant_id": "acme"}
+
+    with pytest.raises(ValueError, match="cannot be used together"):
+        permit.require(
+            "project:read",
+            scope={"tenant_id": "acme"},
+            scope_loader=scope_loader,
+        )
+
+    async def loader() -> Project:
+        return Project(id=1, owner_id="alice")
+
+    with pytest.raises(ValueError, match="cannot be used together"):
+        permit.require_object(
+            "project:read",
+            loader=loader,
+            scope={"tenant_id": "acme"},
+            scope_loader=scope_loader,
+        )
+
+
+def test_scope_loader_must_return_mapping() -> None:
+    app = FastAPI()
+
+    async def principal_loader() -> BasicPrincipal:
+        return BasicPrincipal(id="alice")
+
+    async def invalid_scope_loader() -> str:
+        return "acme"
+
+    permit = FastPermit(
+        backend=InMemoryBackend({"alice": {"project:read"}}),
+        principal_loader=principal_loader,
+    )
+
+    @app.get("/invalid-scope")
+    async def invalid_scope(
+        principal: BasicPrincipal = Depends(
+            permit.require(
+                "project:read",
+                scope_loader=invalid_scope_loader,  # type: ignore[arg-type]
+            )
+        ),
+    ) -> dict[str, str]:
+        return {"principal_id": str(principal.id)}
+
+    with pytest.raises(TypeError, match="must return a mapping"):
+        TestClient(app).get("/invalid-scope")

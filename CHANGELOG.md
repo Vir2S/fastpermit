@@ -7,6 +7,19 @@ intends to follow Semantic Versioning once the public API stabilizes.
 
 ## [Unreleased]
 
+### Added
+
+- Added request-aware dynamic scopes through the optional `scope_loader` argument on `require()` and `require_object()`.
+- Added synchronous and asynchronous scope loader support through FastAPI dependency injection.
+- Added a backward-compatibility regression suite covering the public `0.1.x` API.
+- Added a documented compatibility policy for additive `0.x` development.
+- Exported the public `ScopeLoader` type alias.
+
+### Changed
+
+- Reused one resolved dynamic scope across request prechecks and final object-level authorization.
+- Reject simultaneous `scope` and `scope_loader` configuration to keep authorization context unambiguous.
+
 ## [0.1.1] - 2026-09-02
 
 ### Security

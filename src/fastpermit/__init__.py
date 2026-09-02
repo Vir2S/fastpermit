@@ -8,7 +8,7 @@ from fastpermit.core import (
     all_of,
     any_of,
 )
-from fastpermit.integrations import AccessExceptionFactory, AccessPhase, FastPermit
+from fastpermit.integrations import AccessExceptionFactory, AccessPhase, FastPermit, ScopeLoader
 from fastpermit.permissions import (
     AllowAny,
     DenyAll,
@@ -34,6 +34,7 @@ __all__ = [
     "PermissionContext",
     "PermissionEvaluator",
     "Principal",
+    "ScopeLoader",
     "all_of",
     "any_of",
 ]

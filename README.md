@@ -258,7 +258,7 @@ A permission receives `PermissionContext`, which contains:
 FastAPI integration exposes the current `Request` as `context.attributes["request"]` without
 making the authorization core depend on FastAPI.
 
-Static scope can be attached to a dependency:
+Static scope can be attached to a dependency exactly as in `0.1.x`:
 
 ```python
 Depends(
@@ -269,7 +269,31 @@ Depends(
 )
 ```
 
-Dynamic tenant scopes are planned for the next integration iteration.
+Dynamic scope can be resolved from the current request with an ordinary FastAPI dependency:
+
+```python
+async def tenant_scope(tenant_id: str) -> dict[str, str]:
+    return {"tenant_id": tenant_id}
+
+
+@app.get("/tenants/{tenant_id}/projects")
+async def projects(
+    principal=Depends(
+        permit.require(
+            "project:read",
+            scope_loader=tenant_scope,
+        )
+    ),
+):
+    ...
+```
+
+A scope loader may be synchronous or asynchronous and may use FastAPI dependency injection just
+like any other dependency. `scope` and `scope_loader` are intentionally mutually exclusive so the
+source of authorization context is always explicit.
+
+For object authorization, the resolved dynamic scope is stored in the same `PermissionContext`
+and reused for the final object-level evaluation.
 
 ## HTTP semantics
 
@@ -316,6 +340,21 @@ allows access. A neutral `None` decision remains available through `decision()` 
 6. Storage and caching are adapters, not core concerns.
 7. Authorization expressions must preserve correct semantics across request and object phases.
 
+## Backward compatibility
+
+FastPermit treats the public `0.1.x` API as its compatibility baseline. New `0.x` features are
+designed to be additive rather than requiring application rewrites.
+
+- existing top-level imports remain available;
+- existing constructor arguments keep their behavior;
+- existing `scope={...}` usage remains supported;
+- new parameters are optional and use backward-compatible defaults;
+- storage integrations remain optional adapters rather than new core requirements;
+- intentional removals require a documented deprecation period and are not planned before `1.0`.
+
+Compatibility behavior is covered by a dedicated regression test suite in
+`tests/test_backward_compatibility.py`.
+
 ## Roadmap
 
 ### 0.1
@@ -335,6 +374,7 @@ allows access. A neutral `None` decision remains available through `decision()` 
 
 ### 0.2
 
+- [x] dynamic request and tenant scopes;
 - [ ] SQLAlchemy 2.x adapter;
 - [ ] PostgreSQL RBAC reference models;
 - [ ] Alembic examples;
@@ -349,7 +389,6 @@ allows access. A neutral `None` decision remains available through `decision()` 
 
 ### 0.4
 
-- [ ] dynamic tenant scopes;
 - [ ] attribute-based access control helpers;
 - [ ] resource scopes;
 - [ ] policy metadata.
@@ -366,6 +405,6 @@ MIT
 
 ## Maintainer
 
-Created and maintained by [Vitalii Semotiuk](https://github.com/Vir2S).
+Created and maintained by [Vitaly Sem](https://github.com/Vir2S).
 
 FastPermit is an independent open-source project developed with support from Born2CodeLab.

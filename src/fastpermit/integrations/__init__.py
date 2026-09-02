@@ -17,6 +17,10 @@ AccessExceptionFactory: TypeAlias = Callable[
     [Principal | None, BasePermission, AccessPhase],
     Exception,
 ]
+ScopeLoader: TypeAlias = Callable[
+    ...,
+    Mapping[str, Any] | Awaitable[Mapping[str, Any]],
+]
 
 PrincipalT = TypeVar("PrincipalT", bound=Principal)
 ObjectT = TypeVar("ObjectT")
@@ -69,19 +73,26 @@ class FastPermit(Generic[PrincipalT]):
         permission: PermissionSpec,
         *,
         scope: Mapping[str, Any] | None = None,
+        scope_loader: ScopeLoader | None = None,
     ) -> Callable[..., Awaitable[PrincipalT | None]]:
         """Create a dependency that returns the authorized principal."""
         compiled = self._compile(permission)
         principal_loader = self.principal_loader
+        scope_dependency = self._scope_dependency(
+            scope=scope,
+            scope_loader=scope_loader,
+        )
 
         async def dependency(
             request: Request,
             principal: PrincipalT | None = Depends(principal_loader),
+            resolved_scope: Mapping[str, Any] = Depends(scope_dependency),
         ) -> PrincipalT | None:
+            normalized_scope = self._normalize_scope(resolved_scope)
             allowed = await self.evaluator.check(
                 compiled,
                 principal,
-                scope=scope,
+                scope=normalized_scope,
                 attributes={"request": request},
             )
             if not allowed:
@@ -96,18 +107,24 @@ class FastPermit(Generic[PrincipalT]):
         *,
         loader: Callable[..., ObjectT | Awaitable[ObjectT]],
         scope: Mapping[str, Any] | None = None,
+        scope_loader: ScopeLoader | None = None,
     ) -> Callable[..., Awaitable[ObjectT]]:
         """Pre-check access, load an object, and authorize it."""
         compiled = self._compile(permission)
         principal_loader = self.principal_loader
+        scope_dependency = self._scope_dependency(
+            scope=scope,
+            scope_loader=scope_loader,
+        )
 
         async def precheck(
             request: Request,
             principal: PrincipalT | None = Depends(principal_loader),
+            resolved_scope: Mapping[str, Any] = Depends(scope_dependency),
         ) -> _AuthorizationState[PrincipalT]:
             context = PermissionContext(
                 backend=self.backend,
-                scope=scope or {},
+                scope=self._normalize_scope(resolved_scope),
                 attributes={"request": request},
             )
             decision = await compiled.evaluate(principal, context)
@@ -148,6 +165,31 @@ class FastPermit(Generic[PrincipalT]):
             return permission
         raise TypeError("permission must be a permission code or BasePermission instance.")
 
+    @staticmethod
+    def _scope_dependency(
+        *,
+        scope: Mapping[str, Any] | None,
+        scope_loader: ScopeLoader | None,
+    ) -> ScopeLoader:
+        if scope is not None and scope_loader is not None:
+            raise ValueError("scope and scope_loader cannot be used together.")
+
+        if scope_loader is not None:
+            return scope_loader
+
+        static_scope = scope or {}
+
+        async def load_static_scope() -> Mapping[str, Any]:
+            return static_scope
+
+        return load_static_scope
+
+    @staticmethod
+    def _normalize_scope(scope: Mapping[str, Any]) -> Mapping[str, Any]:
+        if not isinstance(scope, Mapping):
+            raise TypeError("scope_loader must return a mapping.")
+        return scope
+
     def _raise_access_error(
         self,
         principal: Principal | None,
@@ -161,4 +203,5 @@ __all__ = [
     "AccessExceptionFactory",
     "AccessPhase",
     "FastPermit",
+    "ScopeLoader",
 ]
